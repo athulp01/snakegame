@@ -2,37 +2,40 @@
 #include <unistd.h> //usleep()
 #include <cstdlib>  //rand()
 #include <cstdio>
-#include <iostream>
+#include<fstream>
 #include <ctime>
-#include<string>
 
-using namespace std;
-
-void move_player_down(WINDOW *board);
-void move_player_left(WINDOW *board);
+void move_player_down(WINDOW *board);  */ USER-DEFINED FUNCTION PROTOCOLS /* 
+void move_player_left(WINDOW *board);     
 void move_player_right(WINDOW *board);
 void move_player_up(WINDOW *board);
 void create_food(WINDOW *board);
 
-int flag = 1; //global
+int flag = 1;                         
 bool isFoodEaten = true;
 unsigned int food_x = 100;
 unsigned int food_y = 100;
-int score = 1;
-char snake[]="00000000000000000000000000000000000000000000000000000000000000000000000";
-char blank[]="                                                                       ";
+int score = 0;
+char warn=ERR;
+ofstream writer("high.txt");
+char highscore;
+
 int main()
 {
 
+
     initscr();
     curs_set(0);
+    raw();
     WINDOW *board;
     WINDOW *stat;
     start_color();
     noecho();
     init_pair(1, COLOR_RED, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
-    
+    ifstream reader("high.txt");
+    reader.get(highscore);
+    reader.close();
     board = newwin(20, 50, 2, 5);
     box(board, 0, 0);
     wrefresh(board);
@@ -41,9 +44,10 @@ int main()
     wrefresh(stat);
     wattron(board, COLOR_PAIR(1) | A_BOLD | A_BLINK);
     wattron(stat, COLOR_PAIR(2));
-    mvwprintw(board, 2, 1,"0");
+    mvwaddch(board, 2, 1, '0' | COLOR_PAIR(1) | A_BOLD);
     mvwprintw(stat, 2, 6, "SNAKE GAME");
     mvwprintw(stat, 4, 2, "SCORE : ");
+    mvwprintw(stat,5,2,"HIGH SCORE : %c",highscore);
     wattroff(stat, COLOR_PAIR(2));
     wrefresh(stat);
 
@@ -52,40 +56,42 @@ int main()
 
         char ch;
         ch = wgetch(board);
-        switch (ch)
+        if(ch==ERR)
         {
+            ch=warn;
+        }
+        
+       
+        switch (ch)
+        
         case 'd':
         case 'D':
-            wattron(board,COLOR_PAIR(1)|A_BOLD);
+            warn=ERR;
             move_player_right(board);
-            wattroff(board,COLOR_PAIR(1)|A_BOLD);
             break;
         case 'a':
-            wattron(board,COLOR_PAIR(1)|A_BOLD);
+        warn=ERR;
             move_player_left(board);
-            wattroff(board,COLOR_PAIR(1)|A_BOLD);
             break;
         case 'w':
-            wattron(board,COLOR_PAIR(1)|A_BOLD);
+        warn=ERR;
             move_player_up(board);
-            wattroff(board,COLOR_PAIR(1)|A_BOLD);
             break;
         case 's':
-            wattron(board,COLOR_PAIR(1)|A_BOLD);
+        warn=ERR;
             move_player_down(board);
-            wattroff(board,COLOR_PAIR(1)|A_BOLD);
             break;
         }
-        if (isFoodEaten == true)
-        {
-            create_food(board);
-        }
+        
         mvwprintw(stat, 4, 11, "%d", score);
         wrefresh(stat);
         wrefresh(board);
     }
     if (flag != 1)
     {
+        
+        writer<<score;
+        writer.close();
         wattron(stat, COLOR_PAIR(1));
         mvwprintw(stat, 6, 1, "GAME OVER!!!!!!");
         mvwprintw(stat, 7, 1, "PRESS ANY KEY TO EXIT.");
@@ -102,99 +108,163 @@ int main()
 void move_player_right(WINDOW *board)
 {
     int x, y;
-    getyx(board, y, x);
-
-    if (x == 49)
+    if (isFoodEaten == true)
     {
-        flag = 3;
+        create_food(board);
     }
-    else
+    getyx(board, y, x);
+    halfdelay(1);
+    
 
-        if (flag == 1)
+    if (flag == 1)
     {
-        mvwaddnstr(board, y, x - score,blank,score);
-        mvwaddnstr(board, y, x,snake,score);
-
-        if (x  == food_x && y == food_y)
+        for(x;warn==ERR;x++)
         {
-            isFoodEaten = true;
+
+            usleep(10000);
+            mvwaddch(board, y, x - 1, ' ' | COLOR_PAIR(1) | A_BOLD);
+            mvwaddch(board, y, x, '0' | COLOR_PAIR(1) | A_BOLD);
+            wrefresh(board);
+            if (x  == food_x && y == food_y)
+            {
+                isFoodEaten = true;
+                score++;
+            }
+            if (x == 49)
+            {
+                flag = 3;
             
-            score++;
-        }
+            }
+            warn=wgetch(board);
+            
+        }   
+
+              
+        
         wrefresh(board);
+        
+
+        
     }
 }
 
 void move_player_left(WINDOW *board)
 {
     int x, y;
-    getyx(board, y, x);
-    if (x == 2)
+    if (isFoodEaten == true)
     {
-        flag = 3;
+        create_food(board);
     }
-    else
+
+    getyx(board, y, x);
+    halfdelay(1);
+    
+    
 
         if (flag == 1)
     {
-        if (x - 2 == food_x && y == food_y)
+        
+        for(x;warn==ERR;x--)
         {
-            isFoodEaten = true;
-            score++;
-        }
+            usleep(10000);
+            mvwaddch(board, y, x - 1, ' ' | COLOR_PAIR(1) | A_BOLD);
+            mvwaddch(board, y, x - 2, '0' | COLOR_PAIR(1) | A_BOLD);
+            wrefresh(board);
+            if (x - 2 == food_x && y == food_y)
+            {
+                isFoodEaten = true;
+                score++;
+            }
+            if (x == 2)
+            {
+                flag = 3;
+            }
+            warn=wgetch(board);
+        }    
 
-        mvwaddnstr(board, y, x - score,blank,score);
-        mvwaddnstr(board, y, (x - score)-1,snake,score);
+        getyx(board, y, x);
+        
         wrefresh(board);
-        x++;
+        
     }
 }
 
 void move_player_up(WINDOW *board)
 {
     int x, y;
+    if (isFoodEaten == true)
+    {
+        create_food(board);
+    }
     getyx(board, y, x);
-    if (y == 1)
-    {
-        flag = 4;
-    }
-    else
-
+    halfdelay(1);
+        
         if (flag == 1)
-    {
-        if (x-1 == food_x && y - 1 == food_y)
         {
-            isFoodEaten = true;
-            score++;
+        
+            for(y;warn==ERR;y--)
+            {
+                usleep(10000);
+                mvwaddch(board, y, x - 1, ' ' | COLOR_PAIR(1) | A_BOLD);
+                mvwaddch(board, y - 1, x - 1, '0' | COLOR_PAIR(1) | A_BOLD);
+                wrefresh(board);
+                if (x-1 == food_x && y - 1 == food_y)
+                {
+                    isFoodEaten = true;
+                    score++;
+                }
+                if (y == 1)
+                {
+                flag = 4;
+                }
+
+                warn=wgetch(board);
+            }
+            getyx(board, y, x);
+            
+            wrefresh(board);
+            getyx(board, y, x);
+            
         }
-        mvwaddnstr(board, y, x - score,blank,score);
-        mvwaddnstr(board, y - 1, x - score,snake,score);
-        wrefresh(board);
-        x++;
-    }
 }
 
 void move_player_down(WINDOW *board)
 {
     int x, y;
-    getyx(board, y, x);
-    if (y == 18)
+    if (isFoodEaten == true)
     {
-        flag = 5;
+        create_food(board);
     }
-    else
-
-        if (flag == 1)
+    getyx(board, y, x);
+    halfdelay(1);
+      
+    if (flag == 1)
     {
-        if (x-1 == food_x && y + 1 == food_y)
-        {
-            isFoodEaten = true;
-            score++;
-        }
-        mvwaddnstr(board, y, x - score,blank,score);
-        mvwaddnstr(board, y + 1, x - score,snake,score);
+         for(y;warn==ERR;y++)
+         {
+            usleep(10000); 
+            mvwaddch(board, y, x - 1, ' ' | COLOR_PAIR(1) | A_BOLD);
+            mvwaddch(board, y + 1, x - 1, '0' | COLOR_PAIR(1) | A_BOLD);
+            wrefresh(board);
+            if (x-1 == food_x && y + 1 == food_y)
+            {
+                isFoodEaten = true;
+                score++;
+            }
+            if (y == 18)
+            {
+                flag = 5;
+            }
+            warn=wgetch(board);
+         }  
+
+        getyx(board, y, x);
+
+        
         wrefresh(board);
-        x++;
+        getyx(board, y, x);
+        
+        
     }
 }
 
